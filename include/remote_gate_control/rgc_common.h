@@ -1,0 +1,9 @@
+#ifndef RGC_COMMON_H
+#define RGC_COMMON_H
+
+#define RGC_TRIGGER_CMD ("RGC_TRIGGER")
+#define RGC_TRIGGER_CMD_SIZE (sizeof(RGC_TRIGGER_CMD)-1)
+#define RGC_TRIGGER_DELAY_MIN (50)
+#define RGC_TRIGGER_DELAY_MAX (10000)
+
+#endif

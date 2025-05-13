@@ -1,0 +1,19 @@
+{
+    "files.associations": {
+        "drivers.h": "c",
+        "arduino.h": "c",
+        "stdint.h": "c",
+        "interfaces.h": "c",
+        "arduino_serial_iface.h": "c",
+        "drivers_typedefs.h": "c",
+        "stdlib.h": "c",
+        "esp8266_driver.h": "c",
+        "stddef.h": "c",
+        "at_commands.h": "c",
+        "stdbool.h": "c",
+        "esp8266_commands.h": "c",
+        "rgc_common.h": "c",
+        "string.h": "c",
+        "esp8266_fsm.h": "c"
+    }
+}
