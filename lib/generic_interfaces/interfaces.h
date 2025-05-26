@@ -4,23 +4,18 @@
 #include <stdint.h>
 #include <stddef.h>
 
-struct generic_switch_iface_s;
-struct generic_io_iface_s;
-struct generic_time_iface_s;
-struct generic_serial_iface_s;
-
 typedef struct generic_switch_iface_s generic_switch_iface_t;
 typedef struct generic_io_iface_s generic_io_iface_t;
 typedef struct generic_time_iface_s generic_time_iface_t;
 typedef struct generic_serial_iface_s generic_serial_iface_t;
 
-typedef struct buffer_s
+typedef struct
 {
     uint8_t *data;
     size_t size;
 } buffer_t;
 
-typedef union generic_iface_handle_u
+typedef union
 {
     const generic_switch_iface_t *switch_iface;
     const generic_io_iface_t     *io_iface;
@@ -28,7 +23,7 @@ typedef union generic_iface_handle_u
     const generic_serial_iface_t *serial_iface;
 } *generic_iface_handle_t;
 
-typedef struct generic_iface_ctor_dtor_s
+typedef struct
 {
     generic_iface_handle_t (*const create)(void*);
     void (*const destroy)(generic_iface_handle_t);
