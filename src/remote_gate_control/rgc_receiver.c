@@ -18,9 +18,9 @@ rgc_receiver_handle_t rgc_receiver_init(rgc_receiver_init_data_t *init_data)
 
     if (init_data)
     {
-        if (init_data->switch_handle && init_data->generic_io_handle && init_data->time_iface_handle)
+        if (init_data->gpio_hdl && init_data->receiver_io_hdl && init_data->time_iface_hdl)
         {
-            if (init_data->switch_handle->switch_iface && init_data->generic_io_handle->io_iface && init_data->time_iface_handle->time_iface)
+            if (init_data->gpio_hdl->gpio_iface && init_data->receiver_io_hdl->io_iface && init_data->time_iface_hdl->time_iface)
             {
                 rgc_receiver = (rgc_receiver_data_t*)malloc(sizeof(rgc_receiver_data_t));
                 
@@ -32,7 +32,7 @@ rgc_receiver_handle_t rgc_receiver_init(rgc_receiver_init_data_t *init_data)
                                                           : init_data->trigger_delay > RGC_TRIGGER_DELAY_MAX ? RGC_TRIGGER_DELAY_MAX
                                                           : init_data->trigger_delay;
             
-                    rgc_receiver->init_data.switch_handle->switch_iface->turn_off(rgc_receiver->init_data.switch_handle);
+                    rgc_receiver->init_data.gpio_hdl->gpio_iface->turn_off(rgc_receiver->init_data.gpio_hdl);
                 }
             }
         }
@@ -52,37 +52,37 @@ void rgc_receiver_tick(rgc_receiver_handle_t rgc_receiver)
     if (!rgc_receiver)
         return;
 
-    generic_iface_handle_t switch_iface_handle = rgc_receiver->init_data.switch_handle;
-    generic_iface_handle_t generic_io_iface_handle = rgc_receiver->init_data.generic_io_handle;
-    generic_iface_handle_t time_iface_handle = rgc_receiver->init_data.time_iface_handle;
+    iface_ctx_t gpio_iface_ctx = rgc_receiver->init_data.gpio_hdl;
+    iface_ctx_t receiver_io_hdl = rgc_receiver->init_data.receiver_io_hdl;
+    iface_ctx_t time_iface_hdl = rgc_receiver->init_data.time_iface_hdl;
 
-    const generic_switch_iface_t *switch_iface = switch_iface_handle->switch_iface;
-    const generic_io_iface_t *generic_io_iface = generic_io_iface_handle->io_iface;
-    const generic_time_iface_t *time_iface = time_iface_handle->time_iface;
+    const gpio_iface_t *gpio_iface = gpio_iface_ctx->gpio_iface;
+    const generic_io_t *generic_io = receiver_io_hdl->io_iface;
+    const time_iface_t *time_iface = time_iface_hdl->time_iface;
 
-    size_t available_data_sz = generic_io_iface->poll_available_data(generic_io_iface_handle); // TODO: think how to maybe change that, but it's needed for running internal "tick" function of the underlying io implementation..
+    size_t available_data_sz = generic_io->available_data(receiver_io_hdl); // TODO: think how to maybe change that, but it's needed for running internal "tick" function of the underlying io implementation..
 
     if (!(rgc_receiver->is_processing_trigger) && (available_data_sz >= RGC_TRIGGER_CMD_SIZE))
     {
         uint8_t data_buf[RGC_TRIGGER_CMD_SIZE] = {0};
         buffer_t buffer = {data_buf, sizeof(data_buf)};
 
-        size_t sz_received = generic_io_iface->receive_data(generic_io_iface_handle, &buffer);
+        size_t sz_received = generic_io->receive_data(receiver_io_hdl, &buffer);
         if (sz_received == sizeof(data_buf))
         {
             if (memcmp((const void*)data_buf, (const void*)RGC_TRIGGER_CMD, RGC_TRIGGER_CMD_SIZE) != 0)
             {
-                switch_iface->turn_on(switch_iface_handle);
+                gpio_iface->turn_on(gpio_iface_ctx);
                 rgc_receiver->is_processing_trigger = true;
-                rgc_receiver->trigger_start_time = time_iface->get_time_ms(time_iface_handle);
+                rgc_receiver->trigger_start_time = time_iface->get_time_ms(time_iface_hdl);
             }
         }
     }
     else
     {
-        if ((time_iface->get_time_ms(time_iface_handle) - rgc_receiver->trigger_start_time) > rgc_receiver->init_data.trigger_delay)
+        if ((time_iface->get_time_ms(time_iface_hdl) - rgc_receiver->trigger_start_time) > rgc_receiver->init_data.trigger_delay)
         {
-            switch_iface->turn_off(switch_iface_handle);
+            gpio_iface->turn_off(gpio_iface_ctx);
             rgc_receiver->is_processing_trigger = false;
             rgc_receiver->trigger_start_time = 0;
         }
