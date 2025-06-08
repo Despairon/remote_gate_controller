@@ -15,8 +15,8 @@ typedef esp8266_device_t* esp8266_device_handle_t;
 
 typedef struct esp8266_device_init_data_s
 {
-    generic_iface_handle_t serial_iface_handle;
-    generic_iface_handle_t time_iface_handle;
+    iface_ctx_t uart_ctx;
+    iface_ctx_t time_iface_ctx;
     uint64_t cmd_timeout;
 } esp8266_device_init_data_t;
 

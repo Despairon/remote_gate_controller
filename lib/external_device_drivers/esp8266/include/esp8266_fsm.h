@@ -1,7 +1,7 @@
 #ifndef ESP8266_DRIVER_FSM_h
 #define ESP8266_DRIVER_FSM_H
 
-#include <simple_fsm_v2.h>
+#include <simple_fsm_v1.h>
 #include <esp8266/include/esp8266_driver.h>
 
 typedef enum esp8266_fsm_state_e
@@ -10,9 +10,7 @@ typedef enum esp8266_fsm_state_e
     ESP8266_FSM_STATE_READY,
     ESP8266_FSM_STATE_RESET,
     ESP8266_FSM_STATE_CMD_GET_WIFI_MODE,
-    ESP8266_FSM_STATE_CMD_SET_WIFI_MODE,
-
-    ESP8266_FSM_STATES_COUNT
+    ESP8266_FSM_STATE_CMD_SET_WIFI_MODE
 } esp8266_fsm_state_t;
 
 typedef enum esp8266_fsm_event_e
@@ -25,8 +23,6 @@ typedef enum esp8266_fsm_event_e
     ESP8266_FSM_EVENT_CMD_RESET,
     ESP8266_FSM_EVENT_CMD_GET_WIFI_MODE,
     ESP8266_FSM_EVENT_CMD_SET_WIFI_MODE,
-
-    ESP8266_FSM_EVENTS_COUNT,
 
     ESP8266_FSM_NO_EVENT = FSM_NULL_EVENT
 } esp8266_fsm_event_t;
@@ -47,6 +43,7 @@ typedef struct esp8266_fsm_event_data_s
     } data_variant;
 } esp8266_fsm_event_data_t;
 
-extern const fsm_transition_t esp8266_fsm_transitions[ESP8266_FSM_STATES_COUNT][ESP8266_FSM_EVENTS_COUNT];
+extern const fsm_transition_t esp8266_fsm_transitions[];
+extern const size_t esp8266_fsm_transitions_size;
 
 #endif

@@ -10,10 +10,10 @@ struct esp8266_device_s
 {
     esp8266_device_init_data_t init_data;
     state_machine_t state_machine;
-    uint8_t serial_buffer[ESP8266_AT_SERIAL_IFACE_BUFFER_SIZE];
+    uint8_t uart_buffer[ESP8266_AT_SERIAL_IFACE_BUFFER_SIZE];
 };
 
-static void process_serial_input_line(esp8266_device_handle_t handle, char *str, esp8266_fsm_event_t *event_id_out, esp8266_fsm_event_data_t *event_data_out);
+static void process_uart_input_line(esp8266_device_handle_t handle, char *str, esp8266_fsm_event_t *event_id_out, esp8266_fsm_event_data_t *event_data_out);
 
 static inline esp8266_fsm_event_data_t get_fsm_event_data_base(esp8266_device_handle_t handle)
 {
@@ -32,23 +32,23 @@ esp8266_device_handle_t create_esp8266_device(esp8266_device_init_data_t *init_d
 
     if (init_data)
     {
-        if (init_data->serial_iface_handle && init_data->time_iface_handle)
+        if (init_data->uart_ctx && init_data->time_iface_ctx)
         {
-            if (init_data->serial_iface_handle->serial_iface && init_data->serial_iface_handle->time_iface)
+            if (init_data->uart_ctx->uart_iface && init_data->uart_ctx->time_iface)
             {
                 handle = (esp8266_device_handle_t)malloc(sizeof(esp8266_device_t));
                 if (handle)
                 {
                     handle->init_data = *init_data;
 
-                    handle->state_machine = (const state_machine_t){ESP8266_FSM_STATE_OFF, ESP8266_FSM_EVENTS_COUNT, (const fsm_transition_t*)esp8266_fsm_transitions};
+                    handle->state_machine = (const state_machine_t){ESP8266_FSM_STATE_OFF, (const fsm_transition_t*)esp8266_fsm_transitions, esp8266_fsm_transitions_size};
 
-                    (void)memset(handle->serial_buffer, '\0', sizeof(handle->serial_buffer));
+                    (void)memset(handle->uart_buffer, '\0', sizeof(handle->uart_buffer));
 
-                    generic_iface_handle_t serial_iface_handle = handle->init_data.serial_iface_handle;
+                    iface_ctx_t uart_ctx = handle->init_data.uart_ctx;
 
-                    serial_iface_handle->serial_iface->begin(serial_iface_handle, ESP8266_AT_SERIAL_IFACE_SPEED);
-                    serial_iface_handle->serial_iface->flush(serial_iface_handle);
+                    uart_ctx->uart_iface->begin(uart_ctx, ESP8266_AT_SERIAL_IFACE_SPEED);
+                    uart_ctx->uart_iface->flush(uart_ctx);
 
                     esp8266_fsm_event_data_t event_data = get_fsm_event_data_base(handle);
                     fsm_process_event(&(handle->state_machine), (uint16_t)ESP8266_FSM_EVENT_AWAKE, (void*)&event_data);
@@ -65,22 +65,22 @@ void esp8266_tick(esp8266_device_handle_t handle)
     if (!handle)
         return;
 
-    generic_iface_handle_t serial_iface_handle = handle->init_data.serial_iface_handle;
+    iface_ctx_t uart_ctx = handle->init_data.uart_ctx;
     
-    const generic_serial_iface_t *serial = serial_iface_handle->serial_iface;
+    const uart_iface_t *uart = uart_ctx->uart_iface;
     
-    uint8_t *serial_buffer_end = &(handle->serial_buffer[sizeof(handle->serial_buffer)-1]);
+    uint8_t *uart_buffer_end = &(handle->uart_buffer[sizeof(handle->uart_buffer)-1]);
 
-    size_t available_bytes_for_read = serial->available_for_read(serial_iface_handle);
+    size_t available_bytes_for_read = uart->available_for_read(uart_ctx);
     if (available_bytes_for_read)
     {
-        uint8_t *free_buffer_space_start = (uint8_t*)strchr((const char*)(handle->serial_buffer), '\0');
+        uint8_t *free_buffer_space_start = (uint8_t*)strchr((const char*)(handle->uart_buffer), '\0');
 
-        size_t free_buffer_bytes = (size_t)serial_buffer_end - (size_t)free_buffer_space_start - 1;
+        size_t free_buffer_bytes = (size_t)uart_buffer_end - (size_t)free_buffer_space_start - 1;
         if (free_buffer_bytes)
         {
             buffer_t read_buf = {free_buffer_space_start, free_buffer_bytes > available_bytes_for_read ? available_bytes_for_read : free_buffer_bytes};
-            (void)serial->read(serial_iface_handle, &read_buf);
+            (void)uart->read(uart_ctx, &read_buf);
         }
         else
         {
@@ -88,10 +88,10 @@ void esp8266_tick(esp8266_device_handle_t handle)
         }
     }
 
-    size_t filled_buffer_bytes = (size_t)(strchr((const char*)(handle->serial_buffer), '\0') - (char*)(handle->serial_buffer));
+    size_t filled_buffer_bytes = (size_t)(strchr((const char*)(handle->uart_buffer), '\0') - (char*)(handle->uart_buffer));
     if (filled_buffer_bytes)
     {
-        char *line_end = strstr((const char*)(handle->serial_buffer), ESP8266_AT_SERIAL_IFACE_LINE_ENDING);
+        char *line_end = strstr((const char*)(handle->uart_buffer), ESP8266_AT_SERIAL_IFACE_LINE_ENDING);
         if (line_end)
         {
             *line_end = '\0';
@@ -100,13 +100,13 @@ void esp8266_tick(esp8266_device_handle_t handle)
             esp8266_fsm_event_t event = ESP8266_FSM_NO_EVENT;
             esp8266_fsm_event_data_t event_data = get_fsm_event_data_base(handle);
 
-            process_serial_input_line(handle, (char*)(handle->serial_buffer), &event, &event_data);
+            process_uart_input_line(handle, (char*)(handle->uart_buffer), &event, &event_data);
 
             if (event != ESP8266_FSM_NO_EVENT)
                 fsm_process_event(&(handle->state_machine), (uint16_t)event, (void*)&event_data);
 
-            uint8_t *buf_byte = handle->serial_buffer;
-            while (++line_end < (char*)serial_buffer_end)
+            uint8_t *buf_byte = handle->uart_buffer;
+            while (++line_end < (char*)uart_buffer_end)
             {
                 if (*line_end == '\0')
                     break;
@@ -178,14 +178,14 @@ void destroy_esp8266_device(esp8266_device_handle_t handle)
     if (!handle)
         return;
 
-    generic_iface_handle_t serial_iface_handle = handle->init_data.serial_iface_handle;
+    iface_ctx_t uart_ctx = handle->init_data.uart_ctx;
 
-    serial_iface_handle->serial_iface->end(serial_iface_handle);
+    uart_ctx->uart_iface->end(uart_ctx);
 
     free((esp8266_device_t*)handle);
 }
 
-static void process_serial_input_line(esp8266_device_handle_t handle, char *str, esp8266_fsm_event_t *event_id_out, esp8266_fsm_event_data_t *event_data_out)
+static void process_uart_input_line(esp8266_device_handle_t handle, char *str, esp8266_fsm_event_t *event_id_out, esp8266_fsm_event_data_t *event_data_out)
 {
     struct
     {
