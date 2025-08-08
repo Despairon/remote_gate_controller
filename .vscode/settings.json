@@ -15,6 +15,7 @@
         "rgc_common.h": "c",
         "string.h": "c",
         "esp8266_fsm.h": "c",
-        "pins_arduino.h": "c"
+        "pins_arduino.h": "c",
+        "new": "cpp"
     }
 }

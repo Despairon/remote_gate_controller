@@ -26,34 +26,48 @@ static inline esp8266_fsm_event_data_t get_fsm_event_data_base(esp8266_device_ha
     return event_data;
 }
 
+static inline bool is_init_data_valid(esp8266_device_init_data_t *init_data)
+{
+    bool res = init_data != NULL;
+
+    if (res)
+    {
+        if (init_data->platform_uart_begin
+        &&  init_data->platform_uart_flush
+        &&  init_data->platform_uart_read_byte
+        &&  init_data->platform_uart_read
+        &&  init_data->platform_uart_write
+        &&  init_data->platform_uart_end
+        &&  init_data->platform_get_time_ms
+        &&  init_data->cmd_timeout)
+        {
+            res = true;
+        }
+    }
+
+    return res;
+}
+
 esp8266_device_handle_t create_esp8266_device(esp8266_device_init_data_t *init_data)
 {
-    esp8266_device_handle_t handle = NULL;
+    struct esp8266_device_s *handle = NULL;
 
-    if (init_data)
+    if (is_init_data_valid(init_data))
     {
-        if (init_data->uart_ctx && init_data->time_iface_ctx)
+        handle = (esp8266_device_handle_t)malloc(sizeof(esp8266_device_t));
+        if (handle)
         {
-            if (init_data->uart_ctx->uart_iface && init_data->uart_ctx->time_iface)
-            {
-                handle = (esp8266_device_handle_t)malloc(sizeof(esp8266_device_t));
-                if (handle)
-                {
-                    handle->init_data = *init_data;
+            (void)memcpy(&(handle->init_data), init_data, sizeof(esp8266_device_init_data_t));
 
-                    handle->state_machine = (const state_machine_t){ESP8266_FSM_STATE_OFF, (const fsm_transition_t*)esp8266_fsm_transitions, esp8266_fsm_transitions_size};
+            handle->state_machine = (const state_machine_t){ESP8266_FSM_STATE_OFF, (const fsm_transition_t*)esp8266_fsm_transitions, esp8266_fsm_transitions_size};
 
-                    (void)memset(handle->uart_buffer, '\0', sizeof(handle->uart_buffer));
+            (void)memset(handle->uart_buffer, '\0', sizeof(handle->uart_buffer));
 
-                    iface_ctx_t uart_ctx = handle->init_data.uart_ctx;
+            handle->init_data.platform_uart_begin(ESP8266_AT_SERIAL_IFACE_SPEED);
+            handle->init_data.platform_uart_flush();
 
-                    uart_ctx->uart_iface->begin(uart_ctx, ESP8266_AT_SERIAL_IFACE_SPEED);
-                    uart_ctx->uart_iface->flush(uart_ctx);
-
-                    esp8266_fsm_event_data_t event_data = get_fsm_event_data_base(handle);
-                    fsm_process_event(&(handle->state_machine), (uint16_t)ESP8266_FSM_EVENT_AWAKE, (void*)&event_data);
-                }
-            }
+            esp8266_fsm_event_data_t event_data = get_fsm_event_data_base(handle);
+            fsm_process_event(&(handle->state_machine), (uint16_t)ESP8266_FSM_EVENT_AWAKE, (void*)&event_data);
         }
     }
 
@@ -64,7 +78,7 @@ void esp8266_tick(esp8266_device_handle_t handle)
 {
     if (!handle)
         return;
-
+    // TODO: need to rework a little...
     iface_ctx_t uart_ctx = handle->init_data.uart_ctx;
     
     const uart_iface_t *uart = uart_ctx->uart_iface;

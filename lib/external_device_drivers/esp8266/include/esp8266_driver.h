@@ -2,7 +2,6 @@
 #define ESP8266_DRIVER_H
 
 #include "esp8266_common.h"
-#include <interfaces.h>
 #include <stdbool.h>
 
 #define ESP8266_AT_SERIAL_IFACE_LINE_ENDING "\r\n"
@@ -15,8 +14,13 @@ typedef esp8266_device_t* esp8266_device_handle_t;
 
 typedef struct esp8266_device_init_data_s
 {
-    iface_ctx_t uart_ctx;
-    iface_ctx_t time_iface_ctx;
+    void (*const platform_uart_begin)(uint16_t);
+    void (*const platform_uart_flush)();
+    uint8_t (*const platform_uart_read_byte)();
+    size_t (*const platform_uart_read)(uint8_t*, size_t);
+    size_t (*const platform_uart_write)(uint8_t*, size_t);
+    void (*const platform_uart_end)();
+    uint64_t (*const platform_get_time_ms)();
     uint64_t cmd_timeout;
 } esp8266_device_init_data_t;
 
