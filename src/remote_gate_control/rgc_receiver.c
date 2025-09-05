@@ -1,13 +1,11 @@
 #include <remote_gate_control/rgc_receiver.h>
 #include <remote_gate_control/rgc_common.h>
 #include <remote_gate_control/rgc_platform_ifaces.h>
-#include <esp8266_at_driver/include/esp8266_driver.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
 
-static esp8266_device_handle_t esp8266_driver = NULL;
 static bool is_processing_trigger = false;
 static uint64_t trigger_start_time = 0;
 
@@ -20,31 +18,11 @@ void rgc_receiver_init()
 
     rgc_platform_debug_uart_iface.begin(RGC_PLATFORM_DEBUG_UART_BAUDRATE);
     rgc_platform_receiver_uart_iface.begin(RGC_PLATFORM_RECEIVER_UART_BAUDRATE);
-
-    esp8266_device_init_data_t esp8266_init_data =
-    {
-        .platform_uart_begin     = &rgc_platform_receiver_uart_iface.begin,
-        .platform_uart_flush     = &rgc_platform_receiver_uart_iface.flush,
-        .platform_uart_read_byte = &rgc_platform_receiver_uart_iface.read_byte,
-        .platform_uart_read      = &rgc_platform_receiver_uart_iface.read,
-        .platform_uart_write     = &rgc_platform_receiver_uart_iface.write,
-        .platform_uart_end       = &rgc_platform_receiver_uart_iface.end,
-        .cmd_timeout             = RGC_RECEIVER_DEFAULT_TIMEOUT_MS
-    };
-
-    esp8266_driver = create_esp8266_device(&esp8266_init_data);
-
-    if (esp8266_driver)
-    {
-        // TODO: set up esp8266 as Wi-Fi soft-AP, create a TCP server, listen to connections, and wait for the trigger message (RGC_TRIGGER)
-    }
 }
 
 void rgc_receiver_tick()
 {
     // TODO: implement
-
-    esp8266_tick(esp8266_driver);
 
     // if (!is_processing_trigger)
     // {

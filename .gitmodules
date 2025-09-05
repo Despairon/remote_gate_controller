@@ -1,3 +1,0 @@
-[submodule "lib/esp8266_at_driver"]
-	path = lib/esp8266_at_driver
-	url = https://github.com/Despairon/esp8266_at_driver.git

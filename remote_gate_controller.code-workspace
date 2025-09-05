@@ -1,7 +1,7 @@
 {
 	"folders": [
 		{
-			"name": "arduino_esp8266_gate_controller",
+			"name": "remote_gate_controller",
 			"path": "."
 		}
 	],
@@ -12,11 +12,9 @@
             "interfaces.h": "c",
             "arduino_serial_iface.h": "c",
             "stdlib.h": "c",
-            "esp8266_driver.h": "c",
             "stddef.h": "c",
             "at_commands.h": "c",
             "stdbool.h": "c",
-            "esp8266_commands.h": "c",
             "pins_arduino.h": "c"
         }
     }
