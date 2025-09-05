@@ -1,7 +1,7 @@
 #include <remote_gate_control/rgc_receiver.h>
 #include <remote_gate_control/rgc_common.h>
 #include <remote_gate_control/rgc_platform_ifaces.h>
-#include <esp8266/include/esp8266_driver.h>
+#include <esp8266_at_driver/include/esp8266_driver.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -17,6 +17,9 @@ void rgc_receiver_init()
     trigger_start_time = 0;
 
     rgc_platform_switch_gpio_setup();
+
+    rgc_platform_debug_uart_iface.begin(RGC_PLATFORM_DEBUG_UART_BAUDRATE);
+    rgc_platform_receiver_uart_iface.begin(RGC_PLATFORM_RECEIVER_UART_BAUDRATE);
 
     esp8266_device_init_data_t esp8266_init_data =
     {
