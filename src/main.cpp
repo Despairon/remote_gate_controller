@@ -1,6 +1,6 @@
 #include <Arduino.h>
 extern "C"
-{    
+{
     #include <remote_gate_control/rgc_receiver.h>
 }
 
