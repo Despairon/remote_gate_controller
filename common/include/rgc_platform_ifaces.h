@@ -23,7 +23,7 @@ typedef struct
 extern void rgc_platform_switch_gpio_setup();
 extern void rgc_platform_switch_gpio_write(uint8_t state);
 extern void rgc_platform_transmitter_button_setup();
-extern bool rgc_platform_transmitter_button_is_pressed();
+extern bool rgc_platform_transmitter_is_button_pressed();
 
 extern uint64_t rgc_platform_get_time_ms();
 

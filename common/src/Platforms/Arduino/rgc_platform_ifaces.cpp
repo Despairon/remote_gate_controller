@@ -1,5 +1,4 @@
-#include <remote_gate_control/rgc_common.h>
-#include <remote_gate_control/rgc_platform_ifaces.h>
+#include <rgc_platform_ifaces.h>
 #include <Arduino.h>
 #include <VirtualWire.h>
 
@@ -75,9 +74,9 @@ void rgc_platform_transmitter_button_setup()
     pinMode(RGC_PLATFORM_TRANSMITTER_BUTTON_PIN, INPUT);
 }
 
-bool rgc_platform_transmitter_button_is_pressed()
+bool rgc_platform_transmitter_is_button_pressed()
 {
-    return digitalRead(RGC_PLATFORM_TRANSMITTER_BUTTON_PIN) == LOW ? 0 : 1;
+    return (digitalRead(RGC_PLATFORM_TRANSMITTER_BUTTON_PIN) == LOW) ? false : true;
 }
 
 uint64_t rgc_platform_get_time_ms()

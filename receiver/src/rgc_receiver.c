@@ -1,7 +1,6 @@
-#include <remote_gate_control/rgc_receiver.h>
-#include <remote_gate_control/rgc_common.h>
-#include <remote_gate_control/rgc_platform_ifaces.h>
-#include <stdbool.h>
+#include <rgc_receiver.h>
+#include <rgc_common.h>
+#include <rgc_platform_ifaces.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>

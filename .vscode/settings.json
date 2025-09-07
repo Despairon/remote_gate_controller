@@ -12,8 +12,8 @@
         "stdbool.h": "c",
         "rgc_common.h": "c",
         "string.h": "c",
-
         "pins_arduino.h": "c",
-        "new": "cpp"
+        "new": "cpp",
+        "rgc_platform_ifaces.h": "c"
     }
 }

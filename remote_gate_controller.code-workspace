@@ -9,11 +9,8 @@
         "files.associations": {
             "arduino.h": "c",
             "stdint.h": "c",
-            "interfaces.h": "c",
-            "arduino_serial_iface.h": "c",
             "stdlib.h": "c",
             "stddef.h": "c",
-            "at_commands.h": "c",
             "stdbool.h": "c",
             "pins_arduino.h": "c"
         }
