@@ -19,7 +19,7 @@ void rgc_transmitter_tick()
 {
     new_button_state = rgc_platform_transmitter_is_button_pressed();
 
-    if (!button_debounce_start_time) // TODO: Check button connection to the board - it is loose
+    if (!button_debounce_start_time)
     {
         if (new_button_state != is_button_pressed)
             button_debounce_start_time = rgc_platform_get_time_ms();
@@ -32,28 +32,18 @@ void rgc_transmitter_tick()
             {
                 is_button_pressed = new_button_state;
 
-                // TODO: add on button press reaction
-
-                // TODO: Debug prints, can be removed after the button is no longer connected loosely.
+                // Debug prints, just in case.
                 uint8_t msg[64] = {'\0'};
                 snprintf((char*)msg, sizeof(msg), "Button state changed, it is now %s\r\n", is_button_pressed ? "pressed" : "released");
-                rgc_platform_debug_uart_iface.write(msg, strlen(msg));
+                rgc_platform_debug_uart_iface.write(msg, strlen((char*)msg));
+
+                if (is_button_pressed)
+                {
+                    rgc_platform_transmitter_uart_iface.write((uint8_t*)RGC_TRIGGER_CMD, RGC_TRIGGER_CMD_SIZE);
+                }
             }
 
             button_debounce_start_time = 0;
         }
     }
-
-    // Debug prints just in case
-    // static uint64_t cur_ms = 0;
-    // if (cur_ms != rgc_platform_get_time_ms())
-    // {
-    //     cur_ms = rgc_platform_get_time_ms();
-    //     if ((cur_ms % 500) == 0)
-    //     {
-    //         uint8_t msg[32] = {'\0'};
-    //         snprintf((char*)msg, sizeof(msg), "Button is %s\r\n", is_button_pressed ? "pressed" : "released");
-    //         rgc_platform_debug_uart_iface.write(msg, strlen(msg));
-    //     }
-    // }
 }
